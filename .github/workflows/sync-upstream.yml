@@ -1,0 +1,63 @@
+name: Sync Instagram Agent upstream
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: instagram-upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Merge upstream without overwriting local changes
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/$GH_REPO/merge-upstream" -f branch=main
+      - name: Keep scheduled checks active and record monthly health
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64, datetime, json, os, subprocess
+          repo = os.environ["GH_REPO"]
+          path = ".github/upstream-sync-health.json"
+          endpoint = f"repos/{repo}/contents/{path}"
+          result = subprocess.run(["gh", "api", endpoint], capture_output=True, text=True)
+          sha = None
+          now = datetime.datetime.now(datetime.timezone.utc)
+          if result.returncode == 0:
+              data = json.loads(result.stdout)
+              sha = data["sha"]
+              previous = json.loads(base64.b64decode(data["content"]))
+              last = datetime.datetime.fromisoformat(previous["last_successful_check"])
+              if (now - last).days < 28:
+                  print("Upstream checked successfully; monthly health record is current.")
+                  raise SystemExit(0)
+          elif "HTTP 404" not in result.stderr:
+              raise SystemExit(result.stderr)
+          record = {
+              "upstream": "Jakeschincariol/instagram-agent-skill",
+              "branch": "main",
+              "last_successful_check": now.isoformat(),
+              "purpose": "Monthly health record keeps the public fork's daily schedule active."
+          }
+          payload = {
+              "message": "chore: record successful upstream sync health check",
+              "branch": "main",
+              "content": base64.b64encode((json.dumps(record, indent=2) + "\n").encode()).decode()
+          }
+          if sha:
+              payload["sha"] = sha
+          subprocess.run(["gh", "api", "--method", "PUT", endpoint, "--input", "-"],
+                         input=json.dumps(payload), text=True, check=True)
+          PY
