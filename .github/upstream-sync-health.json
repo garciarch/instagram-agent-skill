@@ -1,6 +1,7 @@
 {
   "upstream": "Jakeschincariol/instagram-agent-skill",
-  "branch": "main",
-  "last_successful_check": "2026-11-25T00:11:49.872285+00:00",
-  "purpose": "Monthly health record keeps the public fork's daily schedule active."
+  "upstream_sha": "d03c56bb598be770c60b201f94237e5d1a4268a6",
+  "last_successful_check": "2026-11-25T00:21:59.057342+00:00",
+  "release_version": "1.0.3",
+  "purpose": "Monthly release keeps the public fork schedule active."
 }
