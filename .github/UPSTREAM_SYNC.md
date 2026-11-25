@@ -1,16 +1,13 @@
-# Automatic updates
+# Automatic Instagram Agent updates
 
-This fork follows `Jakeschincariol/instagram-agent-skill` on `main`.
+The workflow runs daily at 03:17 UTC / 06:17 Europe/Istanbul.
 
-- GitHub Actions runs `.github/workflows/sync-upstream.yml` daily at 03:17 UTC (06:17 Europe/Istanbul) and can also be run manually.
-- The workflow uses GitHub's merge-upstream endpoint. It preserves local commits and fails on conflicts instead of force-pushing.
-- Only repository contents write permission is granted to the job. No personal access token or external action is needed.
-- A successful health check is recorded at most once every 28 days, keeping the public repository active so GitHub does not disable the daily schedule after 60 days of inactivity.
-- Claude's marketplace source should be `garciarch/instagram-agent-skill`, with automatic synchronization enabled. Repository push events then update the installed marketplace.
-- On failure, inspect the Actions run; do not report the fork as synchronized until the run succeeds.
+It fetches upstream, merges changes into an isolated branch, increments the plugin version, opens a PR and merges it. Claude automatic sync consumes the merged version-bumping PR. Direct pushes alone did not synchronize during our test. PR #1 (merge a31b880) synchronized without manual update.
 
-Manual recovery: open Actions → Sync Instagram Agent upstream → Run workflow. Resolve conflicts in this fork without discarding local changes.
+The workflow uses the repository GITHUB_TOKEN with contents and pull-requests write permissions. Repository Actions settings must allow GitHub Actions to create pull requests. No personal access token is needed.
 
-## Initial validation
+Unexpected merge conflicts stop the run. Only plugin manifest conflicts from local version increments are resolved using upstream metadata, followed by a new local version. A monthly release keeps the public fork active. Unchanged daily checks do not create releases.
 
-On 2026-11-25, workflow run https://github.com/garciarch/instagram-agent-skill/actions/runs/45516144724 completed successfully, including the upstream merge and health-record steps. Claude was reinstalled from this fork with all 13 skills and automatic synchronization enabled. This documentation commit also exercises the push-to-Claude synchronization path.
+Manual test: Actions → Sync Instagram Agent upstream → Run workflow → enable force_release. This tests the same automated PR and Claude synchronization path. A workflow success verifies GitHub release delivery; verify the merge SHA in Claude to confirm the receiving side.
+
+Source: https://support.claude.com/en/articles/13837433-manage-plugins-for-your-organization
