@@ -10,3 +10,7 @@ This fork follows `Jakeschincariol/instagram-agent-skill` on `main`.
 - On failure, inspect the Actions run; do not report the fork as synchronized until the run succeeds.
 
 Manual recovery: open Actions → Sync Instagram Agent upstream → Run workflow. Resolve conflicts in this fork without discarding local changes.
+
+## Initial validation
+
+On 2026-11-25, workflow run https://github.com/garciarch/instagram-agent-skill/actions/runs/45516144724 completed successfully, including the upstream merge and health-record steps. Claude was reinstalled from this fork with all 13 skills and automatic synchronization enabled. This documentation commit also exercises the push-to-Claude synchronization path.
